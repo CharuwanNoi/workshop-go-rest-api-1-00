@@ -2,20 +2,43 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
+	"net/http"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
 
+// var DB *sql.DB
+type Resource struct {
+	db *sql.DB
+}
+
 func main() {
-	db := createDatabaseConnection()
-	users, _ := getAllUsers(db)
-	fmt.Printf("%+v", users)
+	// DB = createDatabaseConnection()
+	r := Resource{db: createDatabaseConnection()}
+	// users, _ := getAllUsers(db)
+	// fmt.Printf("%+v", users)
+
+	router := gin.New()
+	route := router.Group("/api/v1")
+	route.GET("/user", r.handleGetUsers)
+	router.Run(":8080")
+
+}
+
+func (r *Resource) handleGetUsers(c *gin.Context) {
+	// TODO Get data from database
+	users, _ := getAllUsers(r.db)
+
+	c.JSON(http.StatusOK, users)
 }
 
 func createDatabaseConnection() *sql.DB {
-	db, err := sql.Open("postgres", "postgres://user:pass@localhost/demo?sslmode=disable")
+	var db *sql.DB
+	var err error
+
+	db, err = sql.Open("postgres", "postgres://user:pass@localhost/demo?sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
